@@ -47,7 +47,13 @@ func (p *Post) formatContent(cfg *config.Config, c *Collection, isOwner bool) {
 		baseURL = "/" + c.Alias + "/"
 	}
 	p.HTMLTitle = template.HTML(applyBasicMarkdown([]byte(p.Title.String)))
-	p.HTMLContent = template.HTML(applyMarkdown([]byte(p.Content), baseURL, cfg))
+
+        if strings.HasPrefix(string(p.Content), "<!--__RAW__-->") && cfg.App.AllowRaw {
+	    p.HTMLContent = template.HTML(p.Content)
+        } else {
+	    p.HTMLContent = template.HTML(applyMarkdown([]byte(p.Content), baseURL, cfg))
+        }
+
 	if exc := strings.Index(string(p.Content), "<!--more-->"); exc > -1 {
 		p.HTMLExcerpt = template.HTML(applyMarkdown([]byte(p.Content[:exc]), baseURL, cfg))
 	}

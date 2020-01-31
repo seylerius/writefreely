@@ -94,6 +94,7 @@ type (
 		// Site functionality
 		Chorus        bool `ini:"chorus"`
 		DisableDrafts bool `ini:"disable_drafts"`
+                AllowRaw      bool `ini:"allow_raw"`
 
 		// Users
 		SingleUser       bool `ini:"single_user"`

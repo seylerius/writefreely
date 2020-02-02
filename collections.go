@@ -94,6 +94,27 @@ type (
 		Visibility  *int            `schema:"visibility" json:"public"`
 		Format      *sql.NullString `schema:"format" json:"format"`
 	}
+	SubmittedCollectionDecode struct {
+		// Data used for updating a given collection
+		ID      int64
+		OwnerID uint64
+
+		// Form helpers
+		PreferURL string `schema:"prefer_url" json:"prefer_url"`
+		Privacy   int    `schema:"privacy" json:"privacy"`
+		Pass      string `schema:"password" json:"password"`
+		MathJax   bool   `schema:"mathjax" json:"mathjax"`
+		Handle    string `schema:"handle" json:"handle"`
+
+		// Actual collection values updated in the DB
+		Alias       *string         `schema:"alias" json:"alias"`
+		Title       *string         `schema:"title" json:"title"`
+		Description *string         `schema:"description" json:"description"`
+		StyleSheet  *string `schema:"style_sheet" json:"style_sheet"`
+		Script      *string `schema:"script" json:"script"`
+		Visibility  *int            `schema:"visibility" json:"public"`
+		Format      *string `schema:"format" json:"format"`
+	}
 	CollectionFormat struct {
 		Format string
 	}
@@ -1005,11 +1026,32 @@ func existingCollection(app *App, w http.ResponseWriter, r *http.Request) error 
 	if reqJSON {
 		// Decode JSON request
 		decoder := json.NewDecoder(r.Body)
-		err = decoder.Decode(&c)
+                decode := SubmittedCollectionDecode{OwnerID: uint64(u.ID)}
+		err = decoder.Decode(&decode)
 		if err != nil {
 			log.Error("Couldn't parse collection update JSON request: %v\n", err)
 			return ErrBadJSON
 		}
+
+		c.PreferURL = decode.PreferURL
+		c.Privacy = decode.Privacy
+		c.Pass = decode.Pass
+		c.MathJax = decode.MathJax
+		c.Handle = decode.Handle
+		c.Alias = decode.Alias
+		c.Title = decode.Title
+		c.Description = decode.Description
+		c.Visibility = decode.Visibility
+
+                if decode.StyleSheet != nil {
+                    c.StyleSheet = &sql.NullString{String:*decode.StyleSheet, Valid:true}
+                }
+                if decode.Script != nil {
+                    c.Script = &sql.NullString{String:*decode.Script, Valid: true}
+                }
+                if decode.Format != nil {
+                    c.Format = &sql.NullString{String:*decode.Format, Valid: true}
+                }
 	} else {
 		err = r.ParseForm()
 		if err != nil {

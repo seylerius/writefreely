@@ -48,11 +48,7 @@ func (p *Post) formatContent(cfg *config.Config, c *Collection, isOwner bool) {
 	}
 	p.HTMLTitle = template.HTML(applyBasicMarkdown([]byte(p.Title.String)))
 
-        if strings.HasPrefix(string(p.Content), "<!--__RAW__-->") && cfg.App.AllowRaw {
-	    p.HTMLContent = template.HTML(p.Content)
-        } else {
-	    p.HTMLContent = template.HTML(applyMarkdown([]byte(p.Content), baseURL, cfg))
-        }
+	p.HTMLContent = template.HTML(applyMarkdown([]byte(p.Content), baseURL, cfg))
 
 	if exc := strings.Index(string(p.Content), "<!--more-->"); exc > -1 {
 		p.HTMLExcerpt = template.HTML(applyMarkdown([]byte(p.Content[:exc]), baseURL, cfg))
@@ -64,7 +60,11 @@ func (p *PublicPost) formatContent(cfg *config.Config, isOwner bool) {
 }
 
 func applyMarkdown(data []byte, baseURL string, cfg *config.Config) string {
-	return applyMarkdownSpecial(data, false, baseURL, cfg)
+	if strings.HasPrefix(string(data), "<!--__RAW__-->") && cfg.App.AllowRaw {
+		return(string(data))
+	} else {
+		return applyMarkdownSpecial(data, false, baseURL, cfg)
+	}
 }
 
 func applyMarkdownSpecial(data []byte, skipNoFollow bool, baseURL string, cfg *config.Config) string {
